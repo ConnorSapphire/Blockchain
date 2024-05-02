@@ -18,13 +18,10 @@ class Transaction:
 
     def format_json(self):
         return {
-            "type": "transaction",
-            "payload": {
-                "sender": self.sender,
-                "message": self.message,
-                "nonce": self.nonce,
-                "signature": self.signature
-            }
+            "sender": self.sender,
+            "message": self.message,
+            "nonce": self.nonce,
+            "signature": self.signature
         }
 
     def __str__(self):
