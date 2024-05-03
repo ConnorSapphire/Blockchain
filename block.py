@@ -20,7 +20,7 @@ class Block:
         return hashlib.sha256(block_str).hexdigest()
 
     def is_valid(self):
-        pass  # Check validity
+        return self.current_hash == self.calculate_hash() and all(t.is_valid() for t in self.transactions)
 
     def format_json(self):
         return {
