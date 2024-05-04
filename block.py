@@ -17,7 +17,7 @@ class Block:
             "previous_hash": self.previous_hash
         }
         block_str = json.dumps(block_data, sort_keys=True).encode()
-        return hashlib.sha256(block_str.encode("utf-8")).hexdigest()
+        return hashlib.sha256(block_str).hexdigest()
 
     def is_valid(self):
         return self.current_hash == self.calculate_hash() and all(t.is_valid() for t in self.transactions)
