@@ -113,8 +113,9 @@ class Blockchain():
         hex_hash = raw_hash.hexdigest()
         return hex_hash
 
-    def add_transaction(self, transaction: str) -> bool:
-        if isinstance((tx := validate_transaction(transaction)), dict):
-            self.pool.append(tx)
+    # TODO: validate transaction being added from other client pools???
+    def add_transaction(self, transaction: dict) -> bool:
+        if isinstance(transaction, dict) and transaction not in self.pool:
+            self.pool.append(transaction)
             return True
         return False
