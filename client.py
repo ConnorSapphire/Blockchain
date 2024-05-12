@@ -34,7 +34,7 @@ except Exception as e:
     print(e)
 
 
-
+'''
 time.sleep(5)
 
 message = "AAAAAAAAAAAAAAAAAAAA"
@@ -81,4 +81,4 @@ try:
     print(f"RESPONSE:\n{data}")
 except Exception as e:
     print(e)
-    
+'''
