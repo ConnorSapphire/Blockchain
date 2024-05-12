@@ -35,25 +35,26 @@ class NodeServerHandler(socketserver.BaseRequestHandler):
             mess_type = None
             with self.server.node.blockchain_lock:
                 # TODO: PRINT RECEIVED A TRANSACTION FOR BOTH VALID AND INVALID TRANSACTIONS HERE
-                # print(self.client_address[0])
-                valid = isinstance(tx := validate_message(data), dict)
+                valid = isinstance(tx := validate_message(data, self.client_address[0]), dict)
+
                 if valid:
                     mess_type = tx["type"]
                     
                     # process transaction type
                     if mess_type == "transaction":
-                        if (tx['sender'] in self.server.node.nonces):
-                            valid = tx["nonce"] >= self.server.node.nonces[tx['sender']]
-                            self.server.node.nonces[tx['sender']] += 1
+                        if (tx["payload"]["sender"] in self.server.node.nonces):
+                            valid = tx["payload"]["nonce"] == self.server.node.nonces[tx["payload"]["sender"]]
                         else:
-                            valid = tx["nonce"] == 0
-                            self.server.node.nonces[tx['sender']] = 0
-                        if valid:    
+                            valid = tx["payload"]["nonce"] == 0
+                            self.server.node.nonces[tx["payload"]["sender"]] = 0
+
+                        if valid:
+                            self.server.node.nonces[tx["payload"]["sender"]] += 1
                             tx.pop("type")
                             self.server.node.blockchain.pool.append(tx)
-                            print(f"[MEM] Stored transaction in the transaction pool: {tx['signature']}")
+                            print(f"[MEM] Stored transaction in the transaction pool: {tx['payload']['signature']}")
                         else:
-                            print(f"[TX] Received an invalid transaction, wrong nonce - {tx}")
+                            print(f"[TX] Received an invalid transaction, wrong nonce - {tx['payload']}")
                             
                     # process block request type
                     elif mess_type == "values":
@@ -239,7 +240,8 @@ class Node:
                             if responses[key] == None:
                                 remove.add(key)
                             else:
-                                print(f"[PROPOSAL] Received a block proposal: index: {responses[key]["index"]} transactions: {responses[key]["transactions"]}")
+                                # print(f"[PROPOSAL] Received a block proposal: index: {responses[key]['index']} transactions: {responses[key]['transactions']}")
+                                pass
                     
                     # remove crashed nodes
                     for key in remove:            
@@ -263,7 +265,7 @@ class Node:
                      
                 # compute new block  
                 self.blockchain.new_block()
-                print(f"[CONSENSUS] Appended to the blockchain: {self.blockchain.last_block()["current_hash"]}")          
+                print(f"[CONSENSUS] Appended to the blockchain: {self.blockchain.last_block()['current_hash']}")
                 self.block_request = False
 
 if __name__ == "__main__":
