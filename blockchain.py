@@ -21,7 +21,7 @@ def make_signature(private_key: ed25519.Ed25519PrivateKey, message: str) -> str:
     transaction = {'sender': private_key.public_key().public_bytes_raw().hex(), 'message': message}
     return private_key.sign(transaction_bytes(transaction)).hex()
 
-def validate_message(response: str) -> dict | MessageValidationError:
+def validate_message(response: str, node_ip) -> dict | MessageValidationError:
     try:
         res = json.loads(response)
     except json.JSONDecodeError:
@@ -30,9 +30,8 @@ def validate_message(response: str) -> dict | MessageValidationError:
     if res['type'] == "values":
         return validate_request(res)
     elif res['type'] == "transaction":
+        print(f"[NET] Received a transaction from node {node_ip}: {res['payload']}")
         v = validate_transaction(res)
-        if isinstance(v, dict):
-            v["type"] = "transaction"
         return v
     else:
         return MessageValidationError.INVALID_JSON
@@ -70,7 +69,7 @@ def validate_transaction(transaction: dict) -> dict | MessageValidationError:
         print(f"[TX] Received an invalid transaction, wrong signature message - {tx}")
         return MessageValidationError.INVALID_SIGNATURE
 
-    return tx
+    return transaction
 
 def validate_request(request: dict) -> dict | MessageValidationError:
     try:
