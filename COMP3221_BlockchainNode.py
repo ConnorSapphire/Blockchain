@@ -33,9 +33,12 @@ class NodeServerHandler(socketserver.BaseRequestHandler):
             except:
                 break
             mess_type = None
+
             with self.server.node.blockchain_lock:
-                # TODO: PRINT RECEIVED A TRANSACTION FOR BOTH VALID AND INVALID TRANSACTIONS HERE
-                valid = isinstance(tx := validate_message(data, self.client_address[0]), dict)
+                tx, mess_type = validate_message(data, self.client_address[0])
+                valid = isinstance(tx, dict)
+                print("VALID:")
+                print(valid)
 
                 if valid:
                     mess_type = tx["type"]
