@@ -25,16 +25,15 @@ def validate_message(response: str, node_ip) -> dict | MessageValidationError:
     try:
         res = json.loads(response)
     except json.JSONDecodeError:
-        return MessageValidationError.INVALID_JSON
+        return MessageValidationError.INVALID_JSON, "error"
 
     if res['type'] == "values":
-        return validate_request(res)
+        return validate_request(res), res['type']
     elif res['type'] == "transaction":
         print(f"[NET] Received a transaction from node {node_ip}: {res['payload']}")
-        v = validate_transaction(res)
-        return v
+        return validate_transaction(res), res['type']
     else:
-        return MessageValidationError.INVALID_JSON
+        return MessageValidationError.INVALID_JSON, "error"
 
 
 def validate_transaction(transaction: dict) -> dict | MessageValidationError:
