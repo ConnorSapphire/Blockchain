@@ -37,8 +37,6 @@ class NodeServerHandler(socketserver.BaseRequestHandler):
             with self.server.node.blockchain_lock:
                 tx, mess_type = validate_message(data, self.client_address[0])
                 valid = isinstance(tx, dict)
-                print("VALID:")
-                print(valid)
 
                 if valid:
                     mess_type = tx["type"]
@@ -71,13 +69,24 @@ class NodeServerHandler(socketserver.BaseRequestHandler):
                 send_prefixed(self.request, json.dumps({'response': valid}).encode())
                 
             # respond to block request type
-            elif mess_type == "values" and valid:
-                if tx['payload'] < len(self.server.node.blockchain.blockchain):
-                    send_prefixed(self.request, json.dumps(self.server.node.blockchain.blockchain[tx['payload']], sort_keys=True).encode())
-                elif tx['payload'] == len(self.server.node.blockchain.blockchain):
-                    proposal = self.server.node.blockchain.new_proposal()
-                    print(f"[PROPOSAL] Created a block proposal: {proposal}")
-                    send_prefixed(self.request, json.dumps(proposal).encode())
+            elif mess_type == "values":
+                if valid:
+                    if tx['payload'] < len(self.server.node.blockchain.blockchain):
+                        send_prefixed(self.request, json.dumps(self.server.node.blockchain.blockchain[tx['payload']],
+                                                               sort_keys=True).encode())
+                    elif tx['payload'] == len(self.server.node.blockchain.blockchain):
+                        proposal = self.server.node.blockchain.new_proposal()
+                        print(f"[PROPOSAL] Created a block proposal: {proposal}")
+                        #print("\n<=== CURRENT PROPOSALS LIST")
+                        #print(self.server.node.blockchain.current_proposals)
+                        #print("====>\n")
+                        send_prefixed(self.request, json.dumps(proposal).encode())
+                        #send_prefixed(self.request, json.dumps(self.server.node.blockchain.current_proposals).encode())
+                    else:
+                        send_prefixed(self.request, json.dumps([], sort_keys=True).encode())
+                else:  # invalid block request, response empty list []
+                    send_prefixed(self.request, json.dumps([], sort_keys=True).encode())
+
                     
 
 
@@ -157,6 +166,7 @@ class Node:
             return None
             
     def send_transaction(self, sock, transaction):
+        print("SEND TRANSACTION")
         send_prefixed(sock, transaction.encode())
         try:
             data = recv_prefixed(sock).decode()
@@ -165,6 +175,7 @@ class Node:
             print(e)
             
     def send_block_request(self, sock) -> None | dict:
+
         # add peer to set of nodes we expect a request from
         peer = sock.getpeername()
         self.expecting.add(peer)
@@ -175,6 +186,7 @@ class Node:
             'payload': len(self.blockchain.blockchain)
         }).encode()
         try:
+            print("Sending block request to " + str(sock.getpeername()))
             send_prefixed(sock, request)
             sock.settimeout(5)
         except Exception as e:
@@ -184,7 +196,7 @@ class Node:
                 pass
             return self.attempt_reconnection(peer, request)
         
-        # attempt to receive a respone
+        # attempt to receive a response
         response = self.handle_block_response(sock)
         
         # attempt to reconnect if failed once
@@ -231,10 +243,11 @@ class Node:
         while True:
             if (len(self.blockchain.pool) > 0 or self.block_request):
                 self.block_request = True
+                print("CONSENSUS STARTING")
                 for i in range(self.f + 1):
-                    # receive responses from clients
                     responses = dict()
                     remove = set()
+                    # receive responses from clients
                     for key in self.socks:
                         if key not in responses:
                             responses[key] = self.send_block_request(self.socks[key])
@@ -243,9 +256,13 @@ class Node:
                             if responses[key] == None:
                                 remove.add(key)
                             else:
-                                # print(f"[PROPOSAL] Received a block proposal: index: {responses[key]['index']} transactions: {responses[key]['transactions']}")
-                                pass
-                    
+                                print(f"[PROPOSAL] Received a block proposal: index: {responses[key]['index']} transactions: {responses[key]['transactions']}")
+
+                    # all responses received
+                    if len(remove) == 0:
+                        #break
+                        pass
+
                     # remove crashed nodes
                     for key in remove:            
                         sock = self.socks.pop(key)
@@ -269,6 +286,7 @@ class Node:
                 # compute new block  
                 self.blockchain.new_block()
                 print(f"[CONSENSUS] Appended to the blockchain: {self.blockchain.last_block()['current_hash']}")
+                self.blockchain.current_proposals = []
                 self.block_request = False
 
 if __name__ == "__main__":
