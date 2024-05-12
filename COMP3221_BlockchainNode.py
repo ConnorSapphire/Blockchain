@@ -44,13 +44,13 @@ class NodeServerHandler(socketserver.BaseRequestHandler):
                     # process transaction type
                     if mess_type == "transaction":
                         if (tx["payload"]["sender"] in self.server.node.nonces):
-                            valid = tx["payload"]["nonce"] == self.server.node.nonces[tx["payload"]["sender"]]
+                            valid = tx["payload"]["nonce"] >= self.server.node.nonces[tx["payload"]["sender"]]
+                            self.server.node.nonces[tx["payload"]["sender"]] = tx["payload"]["nonce"] + 1
                         else:
                             valid = tx["payload"]["nonce"] == 0
-                            self.server.node.nonces[tx["payload"]["sender"]] = 0
+                            self.server.node.nonces[tx["payload"]["sender"]] = 1
 
                         if valid:
-                            self.server.node.nonces[tx["payload"]["sender"]] += 1
                             tx.pop("type")
                             self.server.node.blockchain.pool.append(tx)
                             print(f"[MEM] Stored transaction in the transaction pool: {tx['payload']['signature']}")
