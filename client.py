@@ -14,6 +14,7 @@ port = int(sys.argv[2])
 # using the derived public key as the sender
 private_key = ed25519.Ed25519PrivateKey.generate()
 sender = private_key.public_key().public_bytes_raw().hex()
+#sender = "enes"
 message = "AAAAAAAAAAAAAAA"
 nonce = 0
 signature = make_signature(private_key, message)
@@ -32,7 +33,7 @@ try:
 except Exception as e:
     print(e)
 
-'''
+
 
 time.sleep(5)
 
@@ -81,4 +82,3 @@ try:
 except Exception as e:
     print(e)
     
-'''
