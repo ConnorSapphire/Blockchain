@@ -25,14 +25,18 @@ def validate_message(response: str, node_ip) -> dict | MessageValidationError:
     try:
         res = json.loads(response)
     except json.JSONDecodeError:
+        #print(1)
         return MessageValidationError.INVALID_JSON, "error"
 
     if res['type'] == "values":
+        #print(2)
         return validate_request(res), res['type']
     elif res['type'] == "transaction":
         print(f"[NET] Received a transaction from node {node_ip}: {res['payload']}")
+        #print(3)
         return validate_transaction(res), res['type']
     else:
+        #print(4)
         return MessageValidationError.INVALID_JSON, "error"
 
 
@@ -85,6 +89,7 @@ class Blockchain():
     def  __init__(self):
         self.blockchain = []
         self.pool = []
+        self.current_proposals = []
         self.new_block('0' * 64)
 
     def new_block(self, previous_hash=None) -> None:
@@ -99,6 +104,7 @@ class Blockchain():
             'previous_hash': previous_hash or self.blockchain[-1]['current_hash'],
         }
         block['current_hash'] = self.calculate_hash(block)
+        self.current_proposals.append(block)
         return block
 
     def last_block(self) -> dict:
