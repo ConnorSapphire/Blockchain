@@ -24,6 +24,8 @@ transaction = make_transaction(sender, message, nonce, signature)
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((host, port))
 
+time.sleep(2 * (port-6001))
+
 # send the transaction, receive the response and print it
 print(f"SENDING:\n{transaction}")
 send_prefixed(s, transaction.encode())
@@ -34,10 +36,9 @@ except Exception as e:
     print(e)
 
 
-'''
-time.sleep(5)
+time.sleep(8)
 
-message = "AAAAAAAAAAAAAAAAAAAA"
+message = "BBBBBBBBBBBBBBBB"
 nonce = 1
 signature = make_signature(private_key, message)
 transaction = make_transaction(sender, message, nonce, signature)
@@ -51,9 +52,9 @@ except Exception as e:
     print(e)
 
 
-time.sleep(5)
+time.sleep(8)
 
-message = "BBBBBBBBBBBBBBBBBB"
+message = "CCCCCCCCCCCCCCCCC"
 nonce = 2
 signature = make_signature(private_key, message)
 transaction = make_transaction(sender, message, nonce, signature)
@@ -67,10 +68,10 @@ except Exception as e:
     print(e)
 
 
-time.sleep(5)
+time.sleep(8)
 
 message = "FFFFFFFFFFFFFFFFFFFFFF"
-nonce = 5
+nonce = 1
 signature = make_signature(private_key, message)
 transaction = make_transaction(sender, message, nonce, signature)
 
@@ -81,4 +82,3 @@ try:
     print(f"RESPONSE:\n{data}")
 except Exception as e:
     print(e)
-'''
