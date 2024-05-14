@@ -1,3 +1,5 @@
+"""Some of this module was created using altered tutorial code."""
+
 import cryptography.hazmat.primitives.asymmetric.ed25519 as ed25519
 import socket
 import sys
@@ -52,33 +54,33 @@ except Exception as e:
     print(e)
 
 
-time.sleep(8)
+# time.sleep(8)
 
-message = "CCCCCCCCCCCCCCCCC"
-nonce = 2
-signature = make_signature(private_key, message)
-transaction = make_transaction(sender, message, nonce, signature)
+# message = "CCCCCCCCCCCCCCCCC"
+# nonce = 2
+# signature = make_signature(private_key, message)
+# transaction = make_transaction(sender, message, nonce, signature)
 
-print(f"SENDING:\n{transaction}")
-send_prefixed(s, transaction.encode())
-try:
-    data = recv_prefixed(s).decode()
-    print(f"RESPONSE:\n{data}")
-except Exception as e:
-    print(e)
+# print(f"SENDING:\n{transaction}")
+# send_prefixed(s, transaction.encode())
+# try:
+#     data = recv_prefixed(s).decode()
+#     print(f"RESPONSE:\n{data}")
+# except Exception as e:
+#     print(e)
 
 
-time.sleep(8)
+# time.sleep(8)
 
-message = "FFFFFFFFFFFFFFFFFFFFFF"
-nonce = 1
-signature = make_signature(private_key, message)
-transaction = make_transaction(sender, message, nonce, signature)
+# message = "This should be invalid"
+# nonce = 1
+# signature = make_signature(private_key, message)
+# transaction = make_transaction(sender, message, nonce, signature)
 
-print(f"SENDING:\n{transaction}")
-send_prefixed(s, transaction.encode())
-try:
-    data = recv_prefixed(s).decode()
-    print(f"RESPONSE:\n{data}")
-except Exception as e:
-    print(e)
+# print(f"SENDING:\n{transaction}")
+# send_prefixed(s, transaction.encode())
+# try:
+#     data = recv_prefixed(s).decode()
+#     print(f"RESPONSE:\n{data}")
+# except Exception as e:
+#     print(e)

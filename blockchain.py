@@ -1,3 +1,5 @@
+"""Some of this module was created using altered tutorial code."""
+
 from cryptography.exceptions import InvalidSignature
 import cryptography.hazmat.primitives.asymmetric.ed25519 as ed25519
 from enum import Enum
@@ -32,7 +34,7 @@ def validate_message(response: str, node_ip) -> dict | MessageValidationError:
         #print(2)
         return validate_request(res), res['type']
     elif res['type'] == "transaction":
-        print(f"[NET] Received a transaction from node {node_ip}: {res['payload']}")
+        print(f"[NET] Received a transaction from node {node_ip}: {res['payload']}\n")
         #print(3)
         return validate_transaction(res), res['type']
     else:
@@ -47,29 +49,29 @@ def validate_transaction(transaction: dict) -> dict | MessageValidationError:
     tx = transaction['payload']
  
     if not(tx.get('sender') and isinstance(tx['sender'], str) and sender_valid.search(tx['sender'])):
-        print(f"[TX] Received an invalid transaction, wrong sender - {tx}")
+        print(f"[TX] Received an invalid transaction, wrong sender - {tx}\n")
         return MessageValidationError.INVALID_SENDER
 
     if not(tx.get('message') and isinstance(tx['message'], str) and len(tx['message']) <= 70 and tx['message'].isalnum()):
-        print(f"[TX] Received an invalid transaction, wrong message - {tx}")
+        print(f"[TX] Received an invalid transaction, wrong message - {tx}\n")
         return MessageValidationError.INVALID_MESSAGE
 
     try:
         if not (isinstance(tx['nonce'], int) and tx['nonce'] >= 0):
-            print(f"[TX] Received an invalid transaction, wrong nonce - {tx}")
+            print(f"[TX] Received an invalid transaction, wrong nonce - {tx}\n")
             return MessageValidationError.INVALID_NONCE
     except KeyError:
-        print(f"[TX] Received an invalid transaction, wrong nonce - {tx}")
+        print(f"[TX] Received an invalid transaction, wrong nonce - {tx}\n")
         return MessageValidationError.INVALID_NONCE
 
     public_key = ed25519.Ed25519PublicKey.from_public_bytes(bytes.fromhex(tx['sender']))
     if not(tx.get('signature') and isinstance(tx['signature'], str) and signature_valid.search(tx['signature'])):
-        print(f"[TX] Received an invalid transaction, wrong signature message - {tx}")
+        print(f"[TX] Received an invalid transaction, wrong signature message - {tx}\n")
         return MessageValidationError.INVALID_SIGNATURE
     try:
         public_key.verify(bytes.fromhex(tx['signature']), transaction_bytes(tx))
     except InvalidSignature:
-        print(f"[TX] Received an invalid transaction, wrong signature message - {tx}")
+        print(f"[TX] Received an invalid transaction, wrong signature message - {tx}\n")
         return MessageValidationError.INVALID_SIGNATURE
 
     return transaction
@@ -92,15 +94,17 @@ class Blockchain():
         self.current_proposals = []
         self.new_block('0' * 64)
 
-    def new_block(self, previous_hash=None) -> None:
-        block = self.new_proposal(previous_hash)
-        self.pool = []
+    def new_block(self, previous_hash=None, proposal = None) -> None:
+        block = proposal or self.new_proposal(previous_hash)
+        if len(self.pool) > 0 and block['transactions'][0] == self.pool[0]:
+            print(self.pool[0])
+            self.pool.pop(0)
         self.blockchain.append(block)
   
     def new_proposal(self, previous_hash=None) -> dict:
         block = {
             'index': len(self.blockchain),
-            'transactions': self.pool.copy(),
+            'transactions': [] if len(self.pool) == 0 else [self.pool[0]],
             'previous_hash': previous_hash or self.blockchain[-1]['current_hash'],
         }
         block['current_hash'] = self.calculate_hash(block)

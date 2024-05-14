@@ -1,3 +1,5 @@
+"""This module was provided and has not been changed."""
+
 import socket
 import struct
 

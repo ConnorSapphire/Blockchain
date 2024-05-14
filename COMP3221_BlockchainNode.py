@@ -1,3 +1,5 @@
+"""Some of this module was created using altered tutorial code."""
+
 from network import *
 from blockchain import Blockchain, validate_message, MessageValidationError
 
@@ -13,7 +15,6 @@ import cryptography.hazmat.primitives.asymmetric.ed25519 as ed25519
 
 class NodeServer(socketserver.ThreadingTCPServer):
     def __init__(self, server_address, RequestHandlerClass, node, bind_and_activate=True):
-        # TODO initialize self.blockchain and self.blockchain_lock
         self.node = node
         super().__init__(server_address, RequestHandlerClass, bind_and_activate)
 
@@ -50,14 +51,14 @@ class NodeServerHandler(socketserver.BaseRequestHandler):
 
                         if valid:
                             tx.pop("type")
-                            self.server.node.blockchain.pool.append(tx)
-                            print(f"[MEM] Stored transaction in the transaction pool: {tx['payload']['signature']}")
+                            self.server.node.blockchain.pool.append(tx["payload"])
+                            print(f"[MEM] Stored transaction in the transaction pool: {tx['payload']['signature']}\n")
                         else:
-                            print(f"[TX] Received an invalid transaction, wrong nonce - {tx['payload']}")
+                            print(f"[TX] Received an invalid transaction, wrong nonce - {tx['payload']}\n")
                             
                     # process block request type
                     elif mess_type == "values":
-                        print(f"[BLOCK] Received a block request from node {self.client_address[0]}: {tx['payload']}")
+                        print(f"[BLOCK] Received a block request from node {self.client_address[0]}: {tx['payload']}\n")
                         if tx['payload'] == len(self.server.node.blockchain.blockchain) and self.client_address not in self.server.node.expecting:
                             self.server.node.block_request = True
                         self.server.node.expecting.discard(self.client_address)
@@ -74,8 +75,9 @@ class NodeServerHandler(socketserver.BaseRequestHandler):
                                                                sort_keys=True).encode())
                     elif tx['payload'] == len(self.server.node.blockchain.blockchain):
                         proposal = self.server.node.blockchain.new_proposal()
-                        print(f"[PROPOSAL] Created a block proposal: {proposal}")
-                        self.server.node.blockchain.current_proposals.append(proposal)
+                        print(f"[PROPOSAL] Created a block proposal: {proposal}\n")
+                        if proposal not in self.server.node.blockchain.current_proposals:
+                            self.server.node.blockchain.current_proposals.append(proposal)
                         #print("\n<=== CURRENT PROPOSALS LIST")
                         #print(self.server.node.blockchain.current_proposals)
                         #print("====>\n")
@@ -125,7 +127,7 @@ class Node:
         """Start the server thread and the client threads.
         """
         
-        print("STARTING SERVER...")
+        print(f"STARTING SERVER ON PORT {self.server_port}...")
         threading.Thread(target=self.run_server).start()
         self.connect_nodes()
         threading.Thread(target=self.consensus).start()
@@ -139,7 +141,7 @@ class Node:
 
     # CLIENT SIDE
     def connect_nodes(self):
-        print("CONNECTING TO NODES...")
+        print("CONNECTING TO NODES...\n")
         heap = self.node_list.copy()
         # continue attempting to connect to each node
         while len(heap) != 0:
@@ -148,7 +150,7 @@ class Node:
             sock = self.connect_node(peer)
             if not sock:
                 print(f"Failed to connect to IP {peer[1]} on port {peer[0]}")
-                print("Trying again...")
+                print("Trying again...\n")
                 continue
             # remove node from heap if connected
             heap.pop(0)
@@ -205,7 +207,7 @@ class Node:
     def attempt_reconnection(self, peer, request) -> None | dict:
         sock = self.connect_node(peer)
         if not sock:
-            print("Connection failed, node has crashed and won't be contacted anymore.")
+            print("Connection failed, node has crashed and won't be contacted anymore.\n")
         else:
             try:
                 send_prefixed(sock, request)
@@ -224,9 +226,9 @@ class Node:
             return json.loads(data)
         except Exception as e:
             if retry:
-                print("Connection failed, retrying...")
+                print("Connection failed, retrying...\n")
             else:
-                print("Connection failed, node has crashed and won't be contacted anymore.")
+                print("Connection failed, node has crashed and won't be contacted anymore.\n")
     
     def consensus(self):
         # 1. Continuously check to see when to start algorithm:
@@ -235,15 +237,15 @@ class Node:
         # 2. Perform f + 1 iterations of block requests:
         #   a) send block requests to all connected clients
         #   b) disconnect clients that don't respond
-        #   c) add all transactions to pool
+        #   c) add received proposals to list for next round
         # 3. Create new block
         while True:
             if (len(self.blockchain.pool) > 0 or self.block_request):
+                all_proposals = {}
                 self.blockchain.current_proposals = []
                 self.block_request = True
 
                 #print("CONSENSUS STARTING")
-                all_proposals = {}
 
                 for i in range(self.f + 1):
                     responses = dict()
@@ -258,8 +260,12 @@ class Node:
                                 remove.add(key)
                             else:
                                 all_proposals[key] = responses[key]
+                                for response in responses[key]:
+                                    if response not in self.blockchain.current_proposals:
+                                        self.blockchain.current_proposals.append(response)
                                 #print(f"[PROPOSAL] Received block proposals from node {key}")
-                                #print(f"[PROPOSAL] Received a block proposal: index: {responses[key]['index']} transactions: {responses[key]['transactions']}")
+                                # print(f"[PROPOSAL] Received a block proposal: index: {responses[key]['index']} transactions: {responses[key]['transactions']}")
+                                # print(f"[PROPOSAL] Received a block proposal: {responses[key]}")
 
                     # remove crashed nodes
                     for key in remove:            
@@ -272,46 +278,52 @@ class Node:
                     
                     # handle more than f crashes
                     if len(self.socks) < len(self.node_list) - self.f:
-                        print(f"[CONSENSUS] Cannot reach consensus, exiting...")
+                        print(f"[CONSENSUS] Cannot reach consensus, exiting...\n")
                         sys.exit()
 
-                    for key in responses:
-                        for proposal in responses[key]:
-                            txs = proposal['transactions']
-                            for tx in txs:
-                                self.blockchain.add_transaction(tx)
-                            '''
-                            try:
-                                txs = proposal['transactions']
-                                for tx in txs:
-                                    self.blockchain.add_transaction(tx)
-                            except Exception as e:
-                                print("=== ERROR START")
-                                print("Error: " + str(e))
-                                print("Proposal: " + str(proposal))
-                                print("Key: " + str(key))
-                                print("Responses: " + str(responses))
-                                print("=== ERROR END")
-                                sys.exit()
-                            '''
-
+                    # add transactions received to the proposal transaction pool
+                    # for key in responses:
+                    #     for proposal in responses[key]:
+                    #         txs = proposal['transactions']
+                    #         for tx in txs:
+                    #             self.blockchain.add_transaction(tx)
+                            # '''
+                            # try:
+                            #     txs = proposal['transactions']
+                            #     for tx in txs:
+                            #         self.blockchain.add_transaction(tx)
+                            # except Exception as e:
+                            #     print("=== ERROR START")
+                            #     print("Error: " + str(e))
+                            #     print("Proposal: " + str(proposal))
+                            #     print("Key: " + str(key))
+                            #     print("Responses: " + str(responses))
+                            #     print("=== ERROR END")
+                            #     sys.exit()
+                            # '''
 
                 # select min hash block with >= 1 transaction
                 min_hash_block = None
                 for proposals in all_proposals.values():
                     for proposal in proposals:
-                        #print(proposal)
                         if "current_hash" in proposal and proposal["transactions"]:
                             if min_hash_block is None or proposal["current_hash"] < min_hash_block["current_hash"]:
                                 min_hash_block = proposal
+                proposal = self.blockchain.new_proposal()
+                if "current_hash" in proposal and proposal["transactions"]:
+                    if min_hash_block is None or proposal["current_hash"] < min_hash_block["current_hash"]:
+                        min_hash_block = proposal
 
+                # append to the blockchain
                 if min_hash_block:
                     # compute new block
-                    self.blockchain.new_block()
-                    print("NEW BLOCK: " + str(self.blockchain.last_block()))
-                    print(f"[CONSENSUS] Appended to the blockchain: {self.blockchain.last_block()['current_hash']}")
+                    self.blockchain.new_block(proposal=min_hash_block)
+                    print(f"[CONSENSUS] Appended to the blockchain: {self.blockchain.last_block()['current_hash']}\n")
                 else:
-                    print("No valid block proposals")
+                    print("No valid block proposals\n")
+                    
+                # check validity of remaining transactions
+                
 
                 self.block_request = False
 
