@@ -1,3 +1,5 @@
+"""Some of this module was created using altered tutorial code."""
+
 import cryptography.hazmat.primitives.asymmetric.ed25519 as ed25519
 import socket
 import sys
@@ -16,13 +18,15 @@ private_key = ed25519.Ed25519PrivateKey.generate()
 sender = private_key.public_key().public_bytes_raw().hex()
 #sender = "enes"
 message = "AAAAAAAAAAAAAAA"
-nonce = 0
+nonce = 3
 signature = make_signature(private_key, message)
 transaction = make_transaction(sender, message, nonce, signature)
 
 # create a socket and connect to the blockchain node
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((host, port))
+
+time.sleep(2 * (port-6001))
 
 # send the transaction, receive the response and print it
 print(f"SENDING:\n{transaction}")
@@ -34,10 +38,9 @@ except Exception as e:
     print(e)
 
 
-'''
-time.sleep(5)
+# time.sleep(8)
 
-message = "AAAAAAAAAAAAAAAAAAAA"
+message = "BBBBBBBBBBBBBBBB"
 nonce = 1
 signature = make_signature(private_key, message)
 transaction = make_transaction(sender, message, nonce, signature)
@@ -51,34 +54,33 @@ except Exception as e:
     print(e)
 
 
-time.sleep(5)
+# time.sleep(8)
 
-message = "BBBBBBBBBBBBBBBBBB"
-nonce = 2
-signature = make_signature(private_key, message)
-transaction = make_transaction(sender, message, nonce, signature)
+# message = "CCCCCCCCCCCCCCCCC"
+# nonce = 2
+# signature = make_signature(private_key, message)
+# transaction = make_transaction(sender, message, nonce, signature)
 
-print(f"SENDING:\n{transaction}")
-send_prefixed(s, transaction.encode())
-try:
-    data = recv_prefixed(s).decode()
-    print(f"RESPONSE:\n{data}")
-except Exception as e:
-    print(e)
+# print(f"SENDING:\n{transaction}")
+# send_prefixed(s, transaction.encode())
+# try:
+#     data = recv_prefixed(s).decode()
+#     print(f"RESPONSE:\n{data}")
+# except Exception as e:
+#     print(e)
 
 
-time.sleep(5)
+# time.sleep(8)
 
-message = "FFFFFFFFFFFFFFFFFFFFFF"
-nonce = 5
-signature = make_signature(private_key, message)
-transaction = make_transaction(sender, message, nonce, signature)
+# message = "invalid"
+# nonce = 1
+# signature = make_signature(private_key, message)
+# transaction = make_transaction(sender, message, nonce, signature)
 
-print(f"SENDING:\n{transaction}")
-send_prefixed(s, transaction.encode())
-try:
-    data = recv_prefixed(s).decode()
-    print(f"RESPONSE:\n{data}")
-except Exception as e:
-    print(e)
-'''
+# print(f"SENDING:\n{transaction}")
+# send_prefixed(s, transaction.encode())
+# try:
+#     data = recv_prefixed(s).decode()
+#     print(f"RESPONSE:\n{data}")
+# except Exception as e:
+#     print(e)
