@@ -46,7 +46,7 @@ class NodeServerHandler(socketserver.BaseRequestHandler):
                             valid = tx["payload"]["nonce"] >= self.server.node.nonces[tx["payload"]["sender"]]
                             self.server.node.nonces[tx["payload"]["sender"]] = tx["payload"]["nonce"] + 1
                         else:
-                            valid = tx["payload"]["nonce"] == 0
+                            valid = tx["payload"]["nonce"] >= 0
                             self.server.node.nonces[tx["payload"]["sender"]] = 1
 
                         if valid:
@@ -319,11 +319,21 @@ class Node:
                     # compute new block
                     self.blockchain.new_block(proposal=min_hash_block)
                     print(f"[CONSENSUS] Appended to the blockchain: {self.blockchain.last_block()['current_hash']}\n")
+                    # update nonce
+                    self.nonces[self.blockchain.last_block()['transactions'][0]['sender']] = self.blockchain.last_block()['transactions'][0]['nonce'] + 1 
                 else:
                     print("No valid block proposals\n")
                     
                 # check validity of remaining transactions
+                remove = []
+                for transaction in self.blockchain.pool:
+                    if transaction["nonce"] < self.nonces[transaction["sender"]]:
+                        remove.append(transaction)
+                        print(f"[TX] Received an invalid transaction, wrong nonce - {transaction}\n")
                 
+                # remove invalid transactions
+                for transaction in remove:
+                    self.blockchain.pool.remove(transaction)
 
                 self.block_request = False
 

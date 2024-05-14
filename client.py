@@ -18,7 +18,7 @@ private_key = ed25519.Ed25519PrivateKey.generate()
 sender = private_key.public_key().public_bytes_raw().hex()
 #sender = "enes"
 message = "AAAAAAAAAAAAAAA"
-nonce = 0
+nonce = 3
 signature = make_signature(private_key, message)
 transaction = make_transaction(sender, message, nonce, signature)
 
@@ -38,7 +38,7 @@ except Exception as e:
     print(e)
 
 
-time.sleep(8)
+# time.sleep(8)
 
 message = "BBBBBBBBBBBBBBBB"
 nonce = 1
@@ -72,7 +72,7 @@ except Exception as e:
 
 # time.sleep(8)
 
-# message = "This should be invalid"
+# message = "invalid"
 # nonce = 1
 # signature = make_signature(private_key, message)
 # transaction = make_transaction(sender, message, nonce, signature)

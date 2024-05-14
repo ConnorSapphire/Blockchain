@@ -97,7 +97,6 @@ class Blockchain():
     def new_block(self, previous_hash=None, proposal = None) -> None:
         block = proposal or self.new_proposal(previous_hash)
         if len(self.pool) > 0 and block['transactions'][0] == self.pool[0]:
-            print(self.pool[0])
             self.pool.pop(0)
         self.blockchain.append(block)
   
