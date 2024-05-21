@@ -1,5 +1,1 @@
-start cmd /k python client.py 192.168.137.1 6001
-
-@REM start cmd /k python client.py 192.168.137.1 6002
-
-@REM start cmd /k python client.py 192.168.137.1 6003
+start cmd /k python client.py 127.0.0.1 6001

@@ -1,4 +1,7 @@
 Coding Environment:
+	OS:
+		Windows
+
 	Language:
 		python version 3.10.0 or higher
 
@@ -26,14 +29,19 @@ Run Program:
 		between each other and perform a consensus to decide on which blocks to append
 		to the blockchain.
 
-	Run Server:
+	Note:
+	    Given the updated requirements for the 2nd demo, the node_list files are now
+	    populated with the IP address '127.0.0.1' since the updated program expects us
+	    to demo the program	on a local device, and so it uses localhost. The demo nodes
+	    will also be run on ports 6001, 6002 and 6003 but can be updated if needed.
+
+	Run Node:
 		Blockchain Node:
 			$ python COMP3221_BlockchainNode.py <PORT> node_list/<PORT>_list.txt
 
 			Where <PORT> refers to the corresponding port for the particular node.
 			Note that the <PORT> and <IP> values within the node_list files should
 			instead be updated to match the other nodes in the network.
-
 
 	Run Client (Non-Node):
 		Non-node Client:
