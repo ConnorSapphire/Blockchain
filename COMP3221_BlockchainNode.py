@@ -152,6 +152,7 @@ class Node:
                 print(f"Failed to connect to IP {peer[1]} on port {peer[0]}")
                 print("Trying again...\n")
                 continue
+            print(f"CONNECTED ON PORT {peer[1]}")
             # remove node from heap if connected
             heap.pop(0)
             # store socket for node
