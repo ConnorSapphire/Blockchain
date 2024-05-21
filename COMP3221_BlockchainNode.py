@@ -3,6 +3,7 @@
 from network import *
 from blockchain import Blockchain, validate_message, MessageValidationError
 
+import math
 import sys
 import json
 import threading
@@ -101,7 +102,7 @@ class Node:
         self.socks = dict()
         self.block_request = False
         self.expecting = set()
-        self.f = ((len(self.node_list) + 1) // 2) - 1
+        self.f = math.ceil((len(self.node_list) + 1) / 2) - 1
         self.blockchain = Blockchain()
         self.blockchain_lock = Lock()
 
@@ -149,10 +150,11 @@ class Node:
             peer = heap[0]
             sock = self.connect_node(peer)
             if not sock:
-                print(f"Failed to connect to IP {peer[1]} on port {peer[0]}")
+                print(f"Failed to connect to IP {peer[0]} on port {peer[1]}")
                 print("Trying again...\n")
                 continue
             # remove node from heap if connected
+            print(f"[NODE] Connected to {peer[0]} on {peer[1]}\n")
             heap.pop(0)
             # store socket for node
             self.socks[peer] = sock
@@ -163,6 +165,7 @@ class Node:
             sock.connect(peer)
             return sock
         except Exception as e:
+            print(e)
             return None
             
     def send_transaction(self, sock, transaction):
@@ -193,6 +196,7 @@ class Node:
                 sock.close()
             except Exception as e:
                 pass
+            print("[NODE] Connection failed, retrying...\n")
             return self.attempt_reconnection(peer, request)
         
         # attempt to receive a response
@@ -207,7 +211,7 @@ class Node:
     def attempt_reconnection(self, peer, request) -> None | dict:
         sock = self.connect_node(peer)
         if not sock:
-            print("Connection failed, node has crashed and won't be contacted anymore.\n")
+            print("[NODE] Connection failed, node has crashed and won't be contacted anymore.\n")
         else:
             try:
                 send_prefixed(sock, request)
@@ -226,9 +230,9 @@ class Node:
             return json.loads(data)
         except Exception as e:
             if retry:
-                print("Connection failed, retrying...\n")
+                print("[NODE] Connection failed, retrying...\n")
             else:
-                print("Connection failed, node has crashed and won't be contacted anymore.\n")
+                print("[NODE] Connection failed, node has crashed and won't be contacted anymore.\n")
     
     def consensus(self):
         # 1. Continuously check to see when to start algorithm:
@@ -277,7 +281,7 @@ class Node:
                         responses.pop(key)
                     
                     # handle more than f crashes
-                    if len(self.socks) < len(self.node_list) - self.f:
+                    if len(self.node_list) - len(self.socks) > self.f:
                         print(f"[CONSENSUS] Cannot reach consensus, exiting...\n")
                         sys.exit()
 
